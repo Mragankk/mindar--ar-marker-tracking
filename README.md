@@ -18,4 +18,12 @@ This project demonstrates marker-based Augmented Reality (AR) using **MindAR.js*
   - **Rotate sideways** (horizontal drag)
   - **Rotate up/down** (vertical drag)
 - Toggle interaction modes with buttons
-## Example image
+## Demo video
+
+<div align="center">
+  <video controls>
+    <source src="https://github.com/Mragankk/mindar--ar-marker-tracking/blob/main/mindar_video.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <p><i>Demo using target mindar </i></p>
+</div>
