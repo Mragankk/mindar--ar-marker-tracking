@@ -1,145 +1,174 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-    <style>
-        .controls {
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 999;
-        }
-
-        button {
-            padding: 10px 15px;
-            font-size: 14px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            background-color: #444;
-            color: white;
-        }
-
-        button.active {
-            background-color: green;
-        }
-
-        .a-enter-vr-button {
-            display: none !important;
-        }
-    </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    .controls {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 999;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background-color: #444;
+      color: white;
+    }
+    button.active {
+      background-color: green;
+    }
+    .a-enter-vr-button {
+      display: none !important;
+    }
+  </style>
 </head>
 
 <body>
-    <!-- Control Buttons -->
-    <div class="controls">
-        <button id="scaleBtn">Scale</button>
-        <button id="sideBtn">Sideways</button>
-        <button id="updownBtn">Up-Down</button>
-    </div>
+  <div class="controls">
+    <button id="scaleBtn">Scale</button>
+    <button id="sideBtn">Sideways</button>
+    <button id="updownBtn">Up-Down</button>
+    <button id="animateBtn">Animate</button>
+  </div>
 
-    <a-scene mindar-image="imageTargetSrc: targets.mind; filterMinCF: 0.0001; filterBeta: 0.01" color-space="sRGB"
-        renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false">
+  <a-scene mindar-image="imageTargetSrc: targets.mind; filterMinCF: 0.0001; filterBeta: 0.01"
+           color-space="sRGB"
+           renderer="colorManagement: true, physicallyCorrectLights"
+           vr-mode-ui="enabled: false"
+           device-orientation-permission-ui="enabled: false">
+    <a-assets>
+      <a-asset-item id="gltfModel" src="model_animation2/fictional_cold_war_tank.glb"></a-asset-item>
+    </a-assets>
 
-        <a-assets>
-            <a-asset-item id="gltfModel" src="model/scene.gltf"></a-asset-item>
-        </a-assets>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity id="model-container" position="0 0 0.1" smooth-follow>
+        <a-gltf-model id="model"
+                      src="#gltfModel"
+                      scale="0.2 0.2 0.2"
+                      rotation="0 -90 -10"
+                      animation-mixer="clip: *; loop: repeat; timeScale: 1">
+        </a-gltf-model>
+      </a-entity>
+    </a-entity>
+  </a-scene>
 
-        <a-entity mindar-image-target="targetIndex: 0">
+  <!-- Smooth follow component -->
+  <script>
+    AFRAME.registerComponent("smooth-follow", {
+      schema: { lerpFactor: { type: "number", default: 0.15 } },
+      init: function () {
+        this.targetPosition = new THREE.Vector3();
+        this.targetQuaternion = new THREE.Quaternion();
+      },
+      tick: function () {
+        const obj = this.el.object3D;
+        const parent = this.el.parentEl.object3D;
+        this.targetPosition.copy(parent.position);
+        this.targetQuaternion.copy(parent.quaternion);
+        obj.position.lerp(this.targetPosition, this.data.lerpFactor);
+        obj.quaternion.slerp(this.targetQuaternion, this.data.lerpFactor);
+      }
+    });
+  </script>
 
-            <a-entity id="model-container" position="0 0 0.1">
-                <a-gltf-model id="model" src="#gltfModel" scale="0.2 0.2 0.2" rotation="0 -90 -10"></a-gltf-model>
-            </a-entity>
-        </a-entity>
-    </a-scene>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const modelEl = document.querySelector("#model");
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const model = document.querySelector("#model").object3D;
+      const scaleBtn = document.getElementById("scaleBtn");
+      const sideBtn = document.getElementById("sideBtn");
+      const updownBtn = document.getElementById("updownBtn");
+      const animateBtn = document.getElementById("animateBtn");
 
-            // Toggle states
-            let scaleEnabled = false;
-            let sideEnabled = false;
-            let updownEnabled = false;
+      let scaleEnabled = false;
+      let sideEnabled = false;
+      let updownEnabled = false;
+      let animateEnabled = true; // default: animation is ON
 
-            // Button elements
-            const scaleBtn = document.getElementById("scaleBtn");
-            const sideBtn = document.getElementById("sideBtn");
-            const updownBtn = document.getElementById("updownBtn");
+      // Toggle animation on button click
+      animateBtn.onclick = () => {
+        animateEnabled = !animateEnabled;
+        animateBtn.classList.toggle("active", animateEnabled);
+        // Pause/resume animation by setting timeScale
+        modelEl.setAttribute("animation-mixer", `clip: *; loop: repeat; timeScale: ${animateEnabled ? 1 : 0}`);
+      };
+      // Set initial button state
+      animateBtn.classList.toggle("active", animateEnabled);
 
-            // Toggle handlers
-            scaleBtn.onclick = () => {
-                scaleEnabled = !scaleEnabled;
-                scaleBtn.classList.toggle("active", scaleEnabled);
-            };
+      scaleBtn.onclick = () => {
+        scaleEnabled = !scaleEnabled;
+        scaleBtn.classList.toggle("active", scaleEnabled);
+      };
 
-            sideBtn.onclick = () => {
-                sideEnabled = !sideEnabled;
-                sideBtn.classList.toggle("active", sideEnabled);
-            };
+      sideBtn.onclick = () => {
+        sideEnabled = !sideEnabled;
+        sideBtn.classList.toggle("active", sideEnabled);
+      };
 
-            updownBtn.onclick = () => {
-                updownEnabled = !updownEnabled;
-                updownBtn.classList.toggle("active", updownEnabled);
-            };
+      updownBtn.onclick = () => {
+        updownEnabled = !updownEnabled;
+        updownBtn.classList.toggle("active", updownEnabled);
+      };
 
-            // Touch handling
-            let isTouching = false;
-            let lastX = 0, lastY = 0;
-            let initialDistance = null;
-            let initialScale = model.scale.x;
+      // Touch controls for scaling and rotation
+      let isTouching = false;
+      let lastX = 0, lastY = 0;
+      let initialDistance = null;
+      let initialScale = 0.2; // Initial scale
 
-            const getDistance = (touches) => {
-                const dx = touches[0].clientX - touches[1].clientX;
-                const dy = touches[0].clientY - touches[1].clientY;
-                return Math.sqrt(dx * dx + dy * dy);
-            };
+      const getDistance = (touches) => {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+      };
 
-            window.addEventListener("touchstart", (e) => {
-                if (e.touches.length === 1) {
-                    isTouching = true;
-                    lastX = e.touches[0].clientX;
-                    lastY = e.touches[0].clientY;
-                } else if (e.touches.length === 2 && scaleEnabled) {
-                    initialDistance = getDistance(e.touches);
-                    initialScale = model.scale.x;
-                }
-            });
+      window.addEventListener("touchstart", (e) => {
+        if (e.touches.length === 1) {
+          isTouching = true;
+          lastX = e.touches[0].clientX;
+          lastY = e.touches[0].clientY;
+        } else if (e.touches.length === 2 && scaleEnabled) {
+          initialDistance = getDistance(e.touches);
+          initialScale = modelEl.object3D.scale.x;
+        }
+      });
 
-            window.addEventListener("touchmove", (e) => {
-                if (e.touches.length === 1 && isTouching) {
-                    const touch = e.touches[0];
-                    const deltaX = touch.clientX - lastX;
-                    const deltaY = touch.clientY - lastY;
+      window.addEventListener("touchmove", (e) => {
+        if (e.touches.length === 1 && isTouching) {
+          const touch = e.touches[0];
+          const deltaX = touch.clientX - lastX;
+          const deltaY = touch.clientY - lastY;
 
-                    if (sideEnabled) model.rotation.y += deltaX * 0.01;
-                    if (updownEnabled) model.rotation.x += deltaY * 0.01;
+          if (sideEnabled) modelEl.object3D.rotation.y += deltaX * 0.01;
+          if (updownEnabled) modelEl.object3D.rotation.x += deltaY * 0.01;
 
-                    lastX = touch.clientX;
-                    lastY = touch.clientY;
-                } else if (e.touches.length === 2 && initialDistance !== null && scaleEnabled) {
-                    const newDistance = getDistance(e.touches);
-                    let scaleFactor = newDistance / initialDistance;
-                    scaleFactor = Math.max(0.05, Math.min(2, initialScale * scaleFactor));
-                    model.scale.set(scaleFactor, scaleFactor, scaleFactor);
-                }
-            });
+          lastX = touch.clientX;
+          lastY = touch.clientY;
+        } else if (e.touches.length === 2 && initialDistance !== null && scaleEnabled) {
+          const newDistance = getDistance(e.touches);
+          let scaleFactor = newDistance / initialDistance;
+          scaleFactor = Math.max(0.05, Math.min(2, initialScale * scaleFactor));
+          modelEl.object3D.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        }
+      });
 
-            window.addEventListener("touchend", (e) => {
-                if (e.touches.length < 2) initialDistance = null;
-                if (e.touches.length === 0) isTouching = false;
-            });
-        });
-    </script>
+      window.addEventListener("touchend", (e) => {
+        if (e.touches.length < 2) initialDistance = null;
+        if (e.touches.length === 0) isTouching = false;
+      });
+    });
+  </script>
 </body>
 </html>

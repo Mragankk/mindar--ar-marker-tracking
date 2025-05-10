@@ -1,0 +1,11 @@
+Model Information:
+* title:	WW2 MC-2 Tank
+* source:	https://sketchfab.com/3d-models/ww2-mc-2-tank-110ea6f92118466cbf1f22b740fdc701
+* author:	AoVisuals (https://sketchfab.com/AoVisuals)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "WW2 MC-2 Tank" (https://sketchfab.com/3d-models/ww2-mc-2-tank-110ea6f92118466cbf1f22b740fdc701) by AoVisuals (https://sketchfab.com/AoVisuals) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
